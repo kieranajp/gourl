@@ -2,7 +2,6 @@ version: '2'
 services:
     go:
         build: ./docker
-        #image: asoseil/golang-iris
         ports:
             - "3000:3000"
         external_links:
@@ -11,6 +10,7 @@ services:
             - .:/go/src/github.com/kieranajp/gourl
         environment:
             - REDIS_HOST=redis
+            - REDIS_PORT=6379
             - PORT=3001
             - DEBUG=true
 
@@ -18,3 +18,4 @@ services:
         image: redis:3.2-alpine
         volumes:
             - ./docker/storage/redis:/data
+        command: redis-server --appendonly yes

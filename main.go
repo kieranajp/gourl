@@ -2,12 +2,18 @@ package main
 
 import (
 	"fmt"
+	"github.com/iris-contrib/template/html"
 	"github.com/kataras/iris"
 	"gopkg.in/redis.v4"
+	"os"
 )
 
 var redisStorage = redis.NewClient(&redis.Options{
-	Addr: "redis:6379",
+	Addr: fmt.Sprintf(
+		"%s:%s",
+		os.Getenv("REDIS_HOST"),
+		os.Getenv("REDIS_PORT"),
+	),
 })
 
 type UrlAPI struct {
@@ -15,7 +21,7 @@ type UrlAPI struct {
 }
 
 func (u UrlAPI) Get() {
-	u.Write("Hello world")
+	u.MustRender("index.html", nil)
 }
 
 func (u UrlAPI) GetBy(id string) {
@@ -57,13 +63,16 @@ func getNextKey() int64 {
 	}
 
 	key, _ := redisStorage.Get("key").Int64()
-
 	return key
 }
 
 func main() {
 	defer redisStorage.Close()
 
+	iris.UseTemplate(html.New(html.Config{
+		Layout: "_layout.html",
+	})).Directory("./templates", ".html")
+
 	iris.API("/", UrlAPI{})
-	iris.Listen("0.0.0.0:3001")
+	iris.Listen(fmt.Sprintf("0.0.0.0:%s", os.Getenv("PORT")))
 }
